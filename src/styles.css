@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --color-emr-navy: #072751;
+  --color-emr-navy-light: #123761;
+  --color-emr-charcoal: #4e5355;
+  --color-emr-muted: #868c91;
+  --color-emr-light-gray: #c9cdd2;
+  --color-emr-surface: #f7f8f9;
+  --color-emr-border: #dde0e3;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    background: #ffffff;
+    color: var(--color-emr-charcoal);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.7;
+    text-rendering: optimizeLegibility;
+  }
+
+  :focus-visible {
+    outline: 3px solid #567ba3;
+    outline-offset: 4px;
+  }
+}
+
+.emr-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.emr-grid::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image:
+    linear-gradient(rgb(7 39 81 / 3.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(7 39 81 / 3.5%) 1px, transparent 1px);
+  background-size: 56px 56px;
+  content: '';
+  pointer-events: none;
+}
+
+.emr-grid-radial::before {
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 82%);
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 82%);
+}
+
+.emr-grid-linear::before {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
