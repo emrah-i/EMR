@@ -22,10 +22,10 @@ const inquiryTypes = new Set([
 ])
 
 const smtpConfig = {
-  host: 'smtp.mx.cloudflare.net',
+  host: 'smtp.gmail.com',
   port: 465,
   secure: true,
-  user: 'api_token',
+  user: 'sales@emrcommerce.co',
 } as const
 
 const contactEmail = 'sales@emrcommerce.co'
