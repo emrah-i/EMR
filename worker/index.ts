@@ -26,7 +26,7 @@ const smtpConfig = {
   host: 'smtp.gmail.com',
   port: 465,
   secure: true,
-  user: 'sales@emrcommerce.co',
+  user: 'accounts@ibraem.com',
 } as const
 
 const contactEmail = 'sales@emrcommerce.co'
