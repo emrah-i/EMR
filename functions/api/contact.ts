@@ -87,11 +87,7 @@ function normalizePayload(value: Record<string, unknown>): ContactPayload | null
   return payload
 }
 
-export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
-  if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed.' }, 405, { Allow: 'POST' })
-  }
-
+export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   if (!request.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
     return jsonResponse({ error: 'Content-Type must be application/json.' }, 415)
   }
