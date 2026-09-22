@@ -43,8 +43,8 @@
   z-index: -1;
   inset: 0;
   background-image:
-    linear-gradient(rgb(7 39 81 / 3.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(7 39 81 / 3.5%) 1px, transparent 1px);
+    linear-gradient(rgb(7 39 81 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(7 39 81 / 5%) 1px, transparent 1px);
   background-size: 56px 56px;
   content: '';
   pointer-events: none;

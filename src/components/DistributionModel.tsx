@@ -57,15 +57,15 @@ type FlowStepProps = {
 function FlowStep({ icon, label, supportingLabel, last = false }: FlowStepProps) {
   return (
     <li className={`relative ${last ? '' : 'pb-2.5'}`}>
-      <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center max-[520px]:grid-cols-1 max-[520px]:justify-items-center">
-        <span aria-hidden="true" />
-        <div className="flex flex-col items-center text-center">
+      <div className="flex items-center max-[520px]:flex-col">
+        <span className="flex-1 max-[520px]:hidden" aria-hidden="true" />
+        <div className="flex w-16 shrink-0 flex-col items-center text-center">
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#eef5fb] ring-1 ring-[#e2edf7]">
             {icon}
           </span>
           <strong className="mt-1 text-[0.75rem] leading-tight font-semibold text-emr-navy">{label}</strong>
         </div>
-        <span className="ml-2 flex items-center gap-1.5 text-[0.7rem] leading-[1.3] font-medium text-[#5d7592] max-[520px]:mt-1 max-[520px]:ml-0 max-[520px]:justify-center max-[520px]:text-center">
+        <span className="ml-2 flex flex-1 items-center gap-1.5 text-[0.7rem] leading-snug font-medium text-[#5d7592] max-[520px]:mt-1 max-[520px]:ml-0 max-[520px]:justify-center max-[520px]:text-center">
           <span className="flex items-center max-[520px]:hidden" aria-hidden="true">
             <span className="h-px w-4 bg-[#8eb9e3]" />
             <span className="h-1.5 w-1.5 rounded-md bg-[#77abe0]" />
@@ -88,14 +88,14 @@ function FlowStep({ icon, label, supportingLabel, last = false }: FlowStepProps)
 export function DistributionModel() {
   return (
     <aside
-      className="relative w-full max-w-[360px] justify-self-center rounded-md border border-emr-border bg-white px-[clamp(18px,2.4vw,26px)] py-[clamp(14px,1.7vw,18px)] shadow-[0_22px_70px_rgb(7_39_81_/_10%)] max-[960px]:max-w-[420px]"
+      className="relative mx-auto w-full max-w-[360px] rounded-md border border-emr-border bg-white px-6 py-4 shadow-[0_22px_70px_rgb(7_39_81_/_10%)] max-[960px]:max-w-[420px]"
       aria-labelledby="distribution-model-title"
     >
       <div className="mb-2 text-center">
-        <h2 className="m-0 text-[clamp(1.1rem,1.7vw,1.3rem)] leading-[1.18] font-semibold tracking-[-0.03em] text-emr-navy" id="distribution-model-title">
+        <h2 className="m-0 text-xl leading-tight font-semibold tracking-tight text-emr-navy max-[520px]:text-lg" id="distribution-model-title">
           A Focused Distribution Model
         </h2>
-        <p className="mt-1 text-[0.72rem] leading-[1.45] text-[#64778d]">Disciplined purchasing. Responsible distribution.</p>
+        <p className="mt-1 text-xs leading-snug text-[#64778d]">Disciplined purchasing, responsible distribution</p>
       </div>
 
       <ol className="m-0 list-none p-0" aria-label="EMR Commerce distribution process">
@@ -103,12 +103,12 @@ export function DistributionModel() {
         <FlowStep icon={<PurchaseIcon />} label="Purchase" supportingLabel="Inventory planning" />
 
         <li className="relative pb-2.5">
-          <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center max-[520px]:grid-cols-1 max-[520px]:justify-items-center">
-            <span aria-hidden="true" />
+          <div className="flex items-center max-[520px]:flex-col">
+            <span className="flex-1 max-[520px]:hidden" aria-hidden="true" />
             <div className="flex h-16 w-16 items-center justify-center rounded-md bg-emr-navy p-1 shadow-[0_8px_24px_rgb(7_39_81_/_16%)]" aria-label="EMR Commerce">
               <img className="h-full w-full object-contain" src="/brand/emr-logo-white.png" alt="EMR Commerce" />
             </div>
-            <span aria-hidden="true" />
+            <span className="flex-1 max-[520px]:hidden" aria-hidden="true" />
           </div>
           <span className="absolute bottom-0 left-1/2 flex h-2.5 -translate-x-1/2 flex-col items-center text-[#77abe0]" aria-hidden="true">
             <span className="h-1 w-px bg-[#8eb9e3]" />

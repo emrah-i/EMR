@@ -23,10 +23,11 @@ const initialFields: ContactFields = {
   website: '',
 }
 
-const fieldClasses = 'mb-[18px]'
-const labelClasses = 'mb-2 block text-[0.84rem] font-semibold text-[#343b40]'
+const fieldClasses = 'mb-4'
+const rowFieldClasses = `${fieldClasses} min-w-0 flex-1`
+const labelClasses = 'mb-2 block text-sm font-semibold text-emr-charcoal'
 const controlClasses =
-  'w-full rounded-md border border-[#bdc3c8] bg-white text-base text-emr-charcoal transition duration-150 focus:border-emr-navy focus:ring-[3px] focus:ring-emr-navy/10 focus:outline-none'
+  'w-full rounded-md border border-emr-light-gray bg-white text-base text-emr-charcoal transition duration-150 focus:border-emr-navy focus:ring-2 focus:ring-emr-navy/10 focus:outline-none'
 
 export function ContactForm() {
   const [fields, setFields] = useState<ContactFields>(initialFields)
@@ -57,20 +58,6 @@ export function ContactForm() {
       return
     }
 
-    if (fields.website) {
-      setStatus('error')
-      setStatusMessage('We could not submit this form. Please try again.')
-      return
-    }
-
-    if (!siteConfig.contactFormEndpoint) {
-      const message = 'The contact form endpoint has not been configured yet. Please email us directly.'
-      console.error(`${message} Set VITE_CONTACT_FORM_ENDPOINT to enable submissions.`)
-      setStatus('error')
-      setStatusMessage(message)
-      return
-    }
-
     setStatus('submitting')
     setStatusMessage('Sending your message…')
 
@@ -85,6 +72,7 @@ export function ContactForm() {
           company: fields.company.trim(),
           inquiryType: fields.inquiryType,
           message: fields.message.trim(),
+          website: fields.website.trim(),
         }),
       })
 
@@ -103,57 +91,61 @@ export function ContactForm() {
   }
 
   return (
-    <form className="rounded-md border border-emr-border bg-emr-surface p-[clamp(28px,4vw,42px)] shadow-[0_18px_50px_rgb(7_39_81_/_6%)] max-[520px]:px-5 max-[520px]:py-6" onSubmit={handleSubmit} noValidate>
-      <div className="grid grid-cols-2 gap-[18px] max-[520px]:grid-cols-1 max-[520px]:gap-0">
-        <div className={fieldClasses}>
+    <form className="w-full min-w-0 flex-1 rounded-md border border-emr-border bg-emr-surface p-8 shadow-[0_18px_50px_rgb(7_39_81_/_6%)] max-[520px]:p-5" onSubmit={handleSubmit} noValidate>
+      <div className="flex gap-4 max-[520px]:flex-col max-[520px]:gap-0">
+        <div className={rowFieldClasses}>
           <label className={labelClasses} htmlFor="first-name">First Name <span aria-hidden="true">*</span></label>
           <input
-            className={`${controlClasses} h-[50px] px-3.5`}
+            className={`${controlClasses} h-12 px-4`}
             id="first-name"
             name="firstName"
             type="text"
             autoComplete="given-name"
+            placeholder="First name"
             value={fields.firstName}
             onChange={(event) => updateField('firstName', event.target.value)}
             required
           />
         </div>
-        <div className={fieldClasses}>
+        <div className={rowFieldClasses}>
           <label className={labelClasses} htmlFor="last-name">Last Name</label>
           <input
-            className={`${controlClasses} h-[50px] px-3.5`}
+            className={`${controlClasses} h-12 px-4`}
             id="last-name"
             name="lastName"
             type="text"
             autoComplete="family-name"
+            placeholder="Last name"
             value={fields.lastName}
             onChange={(event) => updateField('lastName', event.target.value)}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-[18px] max-[520px]:grid-cols-1 max-[520px]:gap-0">
-        <div className={fieldClasses}>
+      <div className="flex gap-4 max-[520px]:flex-col max-[520px]:gap-0">
+        <div className={rowFieldClasses}>
           <label className={labelClasses} htmlFor="email">Email <span aria-hidden="true">*</span></label>
           <input
-            className={`${controlClasses} h-[50px] px-3.5`}
+            className={`${controlClasses} h-12 px-4`}
             id="email"
             name="email"
             type="email"
             autoComplete="email"
+            placeholder="name@company.com"
             value={fields.email}
             onChange={(event) => updateField('email', event.target.value)}
             required
           />
         </div>
-        <div className={fieldClasses}>
+        <div className={rowFieldClasses}>
           <label className={labelClasses} htmlFor="company">Company</label>
           <input
-            className={`${controlClasses} h-[50px] px-3.5`}
+            className={`${controlClasses} h-12 px-4`}
             id="company"
             name="company"
             type="text"
             autoComplete="organization"
+            placeholder="Company name"
             value={fields.company}
             onChange={(event) => updateField('company', event.target.value)}
           />
@@ -163,7 +155,7 @@ export function ContactForm() {
       <div className={fieldClasses}>
         <label className={labelClasses} htmlFor="inquiry-type">Inquiry Type</label>
         <select
-          className={`${controlClasses} h-[50px] px-3.5`}
+          className={`${controlClasses} h-12 px-4`}
           id="inquiry-type"
           name="inquiryType"
           value={fields.inquiryType}
@@ -176,7 +168,7 @@ export function ContactForm() {
         </select>
       </div>
 
-      <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true">
+      <div className="sr-only" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input
           id="website"
@@ -192,26 +184,27 @@ export function ContactForm() {
       <div className={fieldClasses}>
         <label className={labelClasses} htmlFor="message">Message <span aria-hidden="true">*</span></label>
         <textarea
-          className={`${controlClasses} min-h-[142px] resize-y px-3.5 py-[13px] leading-[1.55]`}
+          className={`${controlClasses} min-h-36 resize-y px-4 py-3 leading-relaxed`}
           id="message"
           name="message"
           rows={6}
+          placeholder="Tell us about your inquiry"
           value={fields.message}
           onChange={(event) => updateField('message', event.target.value)}
           required
         />
       </div>
 
-      <div className="flex items-center justify-between gap-[18px] max-[520px]:flex-col max-[520px]:items-stretch">
+      <div className="flex items-center justify-between gap-4 max-[520px]:flex-col max-[520px]:items-stretch">
         <p
-          className={`m-0 flex-1 text-[0.85rem] leading-normal ${status === 'error' ? 'text-[#8a2830]' : status === 'success' ? 'text-[#23623b]' : ''}`}
+          className={`m-0 flex-1 text-sm leading-normal ${status === 'error' ? 'text-[#8a2830]' : status === 'success' ? 'text-[#23623b]' : ''}`}
           role="status"
           aria-live="polite"
         >
           {statusMessage}
         </p>
         <button
-          className="inline-flex min-h-[50px] min-w-[154px] cursor-pointer items-center justify-center rounded-md border-0 bg-emr-navy px-[22px] py-[13px] text-[0.92rem] font-bold leading-[1.2] text-white transition duration-200 hover:-translate-y-px hover:bg-emr-navy-light disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 motion-reduce:transform-none max-[520px]:w-full"
+          className="inline-flex min-h-12 min-w-40 cursor-pointer items-center justify-center rounded-md border-0 bg-emr-navy px-6 py-3 text-sm font-bold leading-tight text-white transition duration-200 hover:-translate-y-px hover:bg-emr-navy-light disabled:cursor-wait disabled:opacity-70 disabled:hover:translate-y-0 motion-reduce:transform-none max-[520px]:w-full"
           type="submit"
           disabled={status === 'submitting'}
         >

@@ -1,4 +1,1 @@
-- Use flex instead of grid if possible
-- Use simpler tailwind classes instead of complex and hard to edit items, like "clamp"
-- Ensure "Each opportunity is considered through a practical commercial lens" component is not taller than the text to it's left 
-- Remove period from headers and subheaders
+]
