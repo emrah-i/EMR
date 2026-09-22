@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer'
 
 interface Env {
-  SMTP_TOKEN: string
+  ASSETS: Fetcher
+  SMTP_TOKEN?: string
 }
 
 type ContactPayload = {
@@ -87,7 +88,7 @@ function normalizePayload(value: Record<string, unknown>): ContactPayload | null
   return payload
 }
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+async function handleContact(request: Request, env: Env) {
   if (!request.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
     return jsonResponse({ error: 'Content-Type must be application/json.' }, 415)
   }
@@ -186,3 +187,27 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   return jsonResponse({ ok: true })
 }
+
+export default {
+  async fetch(request, env): Promise<Response> {
+    const url = new URL(request.url)
+
+    if (url.pathname === '/api/contact') {
+      if (request.method !== 'POST') {
+        return jsonResponse(
+          { error: 'Method not allowed.' },
+          405,
+          { Allow: 'POST' },
+        )
+      }
+
+      return handleContact(request, env)
+    }
+
+    if (url.pathname.startsWith('/api/')) {
+      return jsonResponse({ error: 'API route not found.' }, 404)
+    }
+
+    return env.ASSETS.fetch(request)
+  },
+} satisfies ExportedHandler<Env>
