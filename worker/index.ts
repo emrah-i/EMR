@@ -1,8 +1,6 @@
-import nodemailer from 'nodemailer'
-
 interface Env {
   ASSETS: Fetcher
-  SMTP_TOKEN?: string
+  RESEND_API_KEY?: string
 }
 
 type ContactPayload = {
@@ -22,15 +20,9 @@ const inquiryTypes = new Set([
   'General Inquiry',
 ])
 
-const smtpConfig = {
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  user: 'accounts@ibraem.com',
-} as const
-
+const resendEndpoint = 'https://api.resend.com/emails'
 const contactEmail = 'sales@emrcommerce.co'
-const contactSender = `${smtpConfig.user}`
+const contactSender = `EMR Commerce <${contactEmail}>`
 
 const fieldLimits: Record<keyof ContactPayload, number> = {
   firstName: 80,
@@ -164,17 +156,16 @@ async function handleContact(request: Request, env: Env, requestId: string) {
 
   console.info('Contact request validated.', { requestId })
 
-  if (!env.SMTP_TOKEN) {
+  if (!env.RESEND_API_KEY) {
     const diagnostics = {
       stage: 'configuration',
-      smtpTokenConfigured: false,
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      authUser: smtpConfig.user,
+      resendApiKeyConfigured: false,
+      endpoint: resendEndpoint,
+      from: contactSender,
+      to: contactEmail,
     }
 
-    console.error('Contact SMTP configuration is missing.', {
+    console.error('Contact Resend configuration is missing.', {
       requestId,
       ...diagnostics,
     })
@@ -200,79 +191,121 @@ async function handleContact(request: Request, env: Env, requestId: string) {
   ].join('\n')
 
   try {
-    const smtpTokenFingerprint = await getSecretFingerprint(env.SMTP_TOKEN)
+    const resendApiKeyFingerprint = await getSecretFingerprint(env.RESEND_API_KEY)
 
-    console.info('Contact SMTP delivery starting.', {
+    console.info('Contact Resend delivery starting.', {
       requestId,
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      authUser: smtpConfig.user,
+      endpoint: resendEndpoint,
       from: contactSender,
       to: contactEmail,
-      smtpTokenConfigured: true,
-      smtpTokenLength: env.SMTP_TOKEN.length,
-      smtpTokenFingerprint,
+      resendApiKeyConfigured: true,
+      resendApiKeyLength: env.RESEND_API_KEY.length,
+      resendApiKeyFingerprint,
     })
 
-    const transporter = nodemailer.createTransport({
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      auth: {
-        user: smtpConfig.user,
-        pass: env.SMTP_TOKEN,
+    const providerResponse = await fetch(resendEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
       },
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 15_000,
+      body: JSON.stringify({
+        from: contactSender,
+        to: [contactEmail],
+        reply_to: payload.email,
+        subject: `New website inquiry — ${payload.inquiryType}`,
+        text,
+      }),
     })
 
-    const delivery = await transporter.sendMail({
-      from: contactSender,
-      to: contactEmail,
-      replyTo: payload.email,
-      subject: `New website inquiry — ${payload.inquiryType}`,
-      text,
-    })
+    let providerBody: unknown
 
-    console.info('Contact SMTP delivery succeeded.', {
+    try {
+      providerBody = await providerResponse.json()
+    } catch {
+      const diagnostics = {
+        stage: 'provider-response',
+        resendApiKeyConfigured: true,
+        providerStatus: providerResponse.status,
+        providerResponseValid: false,
+      }
+
+      console.error('Resend returned an invalid response.', {
+        requestId,
+        ...diagnostics,
+      })
+      return contactResponse(
+        {
+          error: 'Email delivery failed. Please try again later.',
+          diagnostics,
+        },
+        502,
+        requestId,
+      )
+    }
+
+    if (!providerResponse.ok) {
+      const providerError = isRecord(providerBody) ? providerBody : {}
+      const diagnostics = {
+        stage: 'provider-rejection',
+        resendApiKeyConfigured: true,
+        providerStatus: providerResponse.status,
+        providerErrorName:
+          typeof providerError.name === 'string' ? providerError.name.slice(0, 120) : undefined,
+        providerErrorMessage:
+          typeof providerError.message === 'string' ? providerError.message.slice(0, 500) : undefined,
+      }
+
+      console.error('Resend rejected contact delivery.', {
+        requestId,
+        ...diagnostics,
+      })
+      return contactResponse(
+        {
+          error: 'Email delivery failed. Please try again later.',
+          diagnostics,
+        },
+        502,
+        requestId,
+      )
+    }
+
+    if (!isRecord(providerBody) || typeof providerBody.id !== 'string') {
+      const diagnostics = {
+        stage: 'provider-response',
+        resendApiKeyConfigured: true,
+        providerStatus: providerResponse.status,
+        providerResponseValid: false,
+      }
+
+      console.error('Resend returned a success response without an email ID.', {
+        requestId,
+        ...diagnostics,
+      })
+      return contactResponse(
+        {
+          error: 'Email delivery failed. Please try again later.',
+          diagnostics,
+        },
+        502,
+        requestId,
+      )
+    }
+
+    console.info('Contact Resend delivery succeeded.', {
       requestId,
-      messageId: delivery.messageId,
-      response: delivery.response,
-      acceptedCount: delivery.accepted.length,
-      rejectedCount: delivery.rejected.length,
+      providerStatus: providerResponse.status,
+      providerEmailId: providerBody.id,
     })
   } catch (error) {
-    const smtpError = error as {
-      code?: unknown
-      command?: unknown
-      errno?: unknown
-      hostname?: unknown
-      message?: unknown
-      response?: unknown
-      responseCode?: unknown
-      syscall?: unknown
-    }
     const diagnostics = {
-      stage: 'delivery',
-      smtpTokenConfigured: true,
-      host: smtpConfig.host,
-      port: smtpConfig.port,
-      secure: smtpConfig.secure,
-      authUser: smtpConfig.user,
+      stage: 'provider-request',
+      resendApiKeyConfigured: true,
       name: error instanceof Error ? error.name : undefined,
-      message: typeof smtpError.message === 'string' ? smtpError.message.slice(0, 500) : undefined,
-      code: typeof smtpError.code === 'string' ? smtpError.code : undefined,
-      command: typeof smtpError.command === 'string' ? smtpError.command : undefined,
-      responseCode: typeof smtpError.responseCode === 'number' ? smtpError.responseCode : undefined,
-      response: typeof smtpError.response === 'string' ? smtpError.response.slice(0, 500) : undefined,
-      errno: typeof smtpError.errno === 'string' || typeof smtpError.errno === 'number' ? smtpError.errno : undefined,
-      syscall: typeof smtpError.syscall === 'string' ? smtpError.syscall : undefined,
-      hostname: typeof smtpError.hostname === 'string' ? smtpError.hostname : undefined,
+      message: error instanceof Error ? error.message.slice(0, 500) : undefined,
     }
 
-    console.error('SMTP delivery failed.', {
+    console.error('Resend request failed.', {
       requestId,
       ...diagnostics,
     })
@@ -299,7 +332,7 @@ export default {
       console.info('Contact request received.', {
         requestId,
         method: request.method,
-        smtpTokenConfigured: Boolean(env.SMTP_TOKEN),
+        resendApiKeyConfigured: Boolean(env.RESEND_API_KEY),
       })
 
       if (request.method !== 'POST') {

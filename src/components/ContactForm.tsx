@@ -83,7 +83,7 @@ export function ContactForm() {
       } | null
 
       if (!response.ok) {
-        // Temporary client-side diagnostics for SMTP debugging.
+        // Temporary client-side diagnostics for Resend debugging.
         console.error('Contact endpoint rejected the submission.', {
           status: response.status,
           error: typeof responseBody?.error === 'string' ? responseBody.error : undefined,
