@@ -24,13 +24,13 @@ const inquiryTypes = new Set([
 
 const smtpConfig = {
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
   user: 'accounts@ibraem.com',
 } as const
 
 const contactEmail = 'sales@emrcommerce.co'
-const contactSender = `EMR Commerce <${contactEmail}>`
+const contactSender = `EMR Commerce <${smtpConfig.user}>`
 
 const fieldLimits: Record<keyof ContactPayload, number> = {
   firstName: 80,
