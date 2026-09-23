@@ -30,7 +30,7 @@ const smtpConfig = {
 } as const
 
 const contactEmail = 'sales@emrcommerce.co'
-const contactSender = `EMR Commerce <${smtpConfig.user}>`
+const contactSender = `${smtpConfig.user}`
 
 const fieldLimits: Record<keyof ContactPayload, number> = {
   firstName: 80,
@@ -68,6 +68,16 @@ function contactResponse(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+async function getSecretFingerprint(secret: string) {
+  const bytes = new TextEncoder().encode(secret)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+
+  return Array.from(new Uint8Array(digest))
+    .slice(0, 6)
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 function normalizePayload(value: Record<string, unknown>): ContactPayload | null {
@@ -190,6 +200,8 @@ async function handleContact(request: Request, env: Env, requestId: string) {
   ].join('\n')
 
   try {
+    const smtpTokenFingerprint = await getSecretFingerprint(env.SMTP_TOKEN)
+
     console.info('Contact SMTP delivery starting.', {
       requestId,
       host: smtpConfig.host,
@@ -199,6 +211,8 @@ async function handleContact(request: Request, env: Env, requestId: string) {
       from: contactSender,
       to: contactEmail,
       smtpTokenConfigured: true,
+      smtpTokenLength: env.SMTP_TOKEN.length,
+      smtpTokenFingerprint,
     })
 
     const transporter = nodemailer.createTransport({
