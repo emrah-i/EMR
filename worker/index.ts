@@ -53,6 +53,19 @@ function jsonResponse(body: Record<string, unknown>, status = 200, headers?: Hea
   })
 }
 
+function contactResponse(
+  body: Record<string, unknown>,
+  status: number,
+  requestId: string,
+  headers?: HeadersInit,
+) {
+  return jsonResponse(
+    { ...body, requestId },
+    status,
+    { 'X-Request-ID': requestId, ...headers },
+  )
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -88,14 +101,14 @@ function normalizePayload(value: Record<string, unknown>): ContactPayload | null
   return payload
 }
 
-async function handleContact(request: Request, env: Env) {
+async function handleContact(request: Request, env: Env, requestId: string) {
   if (!request.headers.get('Content-Type')?.toLowerCase().includes('application/json')) {
-    return jsonResponse({ error: 'Content-Type must be application/json.' }, 415)
+    return contactResponse({ error: 'Content-Type must be application/json.' }, 415, requestId)
   }
 
   const contentLength = Number(request.headers.get('Content-Length') ?? 0)
   if (Number.isFinite(contentLength) && contentLength > 16_384) {
-    return jsonResponse({ error: 'Request body is too large.' }, 413)
+    return contactResponse({ error: 'Request body is too large.' }, 413, requestId)
   }
 
   let body: unknown
@@ -103,45 +116,66 @@ async function handleContact(request: Request, env: Env) {
   try {
     body = await request.json()
   } catch {
-    return jsonResponse({ error: 'Request body must contain valid JSON.' }, 400)
+    return contactResponse({ error: 'Request body must contain valid JSON.' }, 400, requestId)
   }
 
   if (!isRecord(body)) {
-    return jsonResponse({ error: 'Request body must be a JSON object.' }, 400)
+    return contactResponse({ error: 'Request body must be a JSON object.' }, 400, requestId)
   }
 
   const payload = normalizePayload(body)
   if (!payload) {
-    return jsonResponse({ error: 'All submitted fields must be text.' }, 400)
+    return contactResponse({ error: 'All submitted fields must be text.' }, 400, requestId)
   }
 
   if (payload.website) {
-    return jsonResponse({ ok: true })
+    return contactResponse({ ok: true }, 200, requestId)
   }
 
   if (!payload.firstName || !payload.email || !payload.message) {
-    return jsonResponse({ error: 'First name, email, and message are required.' }, 400)
+    return contactResponse({ error: 'First name, email, and message are required.' }, 400, requestId)
   }
 
   const oversizedField = (Object.keys(fieldLimits) as Array<keyof ContactPayload>).find(
     (field) => payload[field].length > fieldLimits[field],
   )
   if (oversizedField) {
-    return jsonResponse({ error: 'One or more fields exceed the allowed length.' }, 400)
+    return contactResponse({ error: 'One or more fields exceed the allowed length.' }, 400, requestId)
   }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailPattern.test(payload.email)) {
-    return jsonResponse({ error: 'Please enter a valid email address.' }, 400)
+    return contactResponse({ error: 'Please enter a valid email address.' }, 400, requestId)
   }
 
   if (!inquiryTypes.has(payload.inquiryType)) {
-    return jsonResponse({ error: 'Please select a valid inquiry type.' }, 400)
+    return contactResponse({ error: 'Please select a valid inquiry type.' }, 400, requestId)
   }
 
+  console.info('Contact request validated.', { requestId })
+
   if (!env.SMTP_TOKEN) {
-    console.error('The contact form SMTP token is not configured.')
-    return jsonResponse({ error: 'Email delivery is temporarily unavailable.' }, 503)
+    const diagnostics = {
+      stage: 'configuration',
+      smtpTokenConfigured: false,
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      authUser: smtpConfig.user,
+    }
+
+    console.error('Contact SMTP configuration is missing.', {
+      requestId,
+      ...diagnostics,
+    })
+    return contactResponse(
+      {
+        error: 'Email delivery is temporarily unavailable.',
+        diagnostics,
+      },
+      503,
+      requestId,
+    )
   }
 
   const fullName = [payload.firstName, payload.lastName].filter(Boolean).join(' ')
@@ -156,6 +190,17 @@ async function handleContact(request: Request, env: Env) {
   ].join('\n')
 
   try {
+    console.info('Contact SMTP delivery starting.', {
+      requestId,
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      authUser: smtpConfig.user,
+      from: contactSender,
+      to: contactEmail,
+      smtpTokenConfigured: true,
+    })
+
     const transporter = nodemailer.createTransport({
       host: smtpConfig.host,
       port: smtpConfig.port,
@@ -169,23 +214,65 @@ async function handleContact(request: Request, env: Env) {
       socketTimeout: 15_000,
     })
 
-    await transporter.sendMail({
+    const delivery = await transporter.sendMail({
       from: contactSender,
       to: contactEmail,
       replyTo: payload.email,
       subject: `New website inquiry — ${payload.inquiryType}`,
       text,
     })
-  } catch (error) {
-    const smtpError = error as { code?: unknown; responseCode?: unknown }
-    console.error('SMTP delivery failed.', {
-      code: typeof smtpError.code === 'string' ? smtpError.code : undefined,
-      responseCode: typeof smtpError.responseCode === 'number' ? smtpError.responseCode : undefined,
+
+    console.info('Contact SMTP delivery succeeded.', {
+      requestId,
+      messageId: delivery.messageId,
+      response: delivery.response,
+      acceptedCount: delivery.accepted.length,
+      rejectedCount: delivery.rejected.length,
     })
-    return jsonResponse({ error: 'Email delivery failed. Please try again later.' }, 502)
+  } catch (error) {
+    const smtpError = error as {
+      code?: unknown
+      command?: unknown
+      errno?: unknown
+      hostname?: unknown
+      message?: unknown
+      response?: unknown
+      responseCode?: unknown
+      syscall?: unknown
+    }
+    const diagnostics = {
+      stage: 'delivery',
+      smtpTokenConfigured: true,
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      authUser: smtpConfig.user,
+      name: error instanceof Error ? error.name : undefined,
+      message: typeof smtpError.message === 'string' ? smtpError.message.slice(0, 500) : undefined,
+      code: typeof smtpError.code === 'string' ? smtpError.code : undefined,
+      command: typeof smtpError.command === 'string' ? smtpError.command : undefined,
+      responseCode: typeof smtpError.responseCode === 'number' ? smtpError.responseCode : undefined,
+      response: typeof smtpError.response === 'string' ? smtpError.response.slice(0, 500) : undefined,
+      errno: typeof smtpError.errno === 'string' || typeof smtpError.errno === 'number' ? smtpError.errno : undefined,
+      syscall: typeof smtpError.syscall === 'string' ? smtpError.syscall : undefined,
+      hostname: typeof smtpError.hostname === 'string' ? smtpError.hostname : undefined,
+    }
+
+    console.error('SMTP delivery failed.', {
+      requestId,
+      ...diagnostics,
+    })
+    return contactResponse(
+      {
+        error: 'Email delivery failed. Please try again later.',
+        diagnostics,
+      },
+      502,
+      requestId,
+    )
   }
 
-  return jsonResponse({ ok: true })
+  return contactResponse({ ok: true }, 200, requestId)
 }
 
 export default {
@@ -193,15 +280,24 @@ export default {
     const url = new URL(request.url)
 
     if (url.pathname === '/api/contact') {
+      const requestId = request.headers.get('cf-ray') ?? crypto.randomUUID()
+
+      console.info('Contact request received.', {
+        requestId,
+        method: request.method,
+        smtpTokenConfigured: Boolean(env.SMTP_TOKEN),
+      })
+
       if (request.method !== 'POST') {
-        return jsonResponse(
+        return contactResponse(
           { error: 'Method not allowed.' },
           405,
+          requestId,
           { Allow: 'POST' },
         )
       }
 
-      return handleContact(request, env)
+      return handleContact(request, env, requestId)
     }
 
     if (url.pathname.startsWith('/api/')) {

@@ -76,9 +76,34 @@ export function ContactForm() {
         }),
       })
 
+      const responseBody = await response.json().catch(() => null) as {
+        diagnostics?: unknown
+        error?: unknown
+        requestId?: unknown
+      } | null
+
       if (!response.ok) {
+        // Temporary client-side diagnostics for SMTP debugging.
+        console.error('Contact endpoint rejected the submission.', {
+          status: response.status,
+          error: typeof responseBody?.error === 'string' ? responseBody.error : undefined,
+          requestId:
+            response.headers.get('x-request-id') ??
+            (typeof responseBody?.requestId === 'string' ? responseBody.requestId : undefined),
+          diagnostics:
+            typeof responseBody?.diagnostics === 'object' && responseBody.diagnostics !== null
+              ? responseBody.diagnostics
+              : undefined,
+        })
         throw new Error(`Form submission failed with status ${response.status}`)
       }
+
+      console.info('Contact endpoint accepted the submission.', {
+        status: response.status,
+        requestId:
+          response.headers.get('x-request-id') ??
+          (typeof responseBody?.requestId === 'string' ? responseBody.requestId : undefined),
+      })
 
       setFields(initialFields)
       setStatus('success')

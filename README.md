@@ -29,6 +29,14 @@ npx wrangler secret put SMTP_TOKEN
 
 The Worker connects to `smtp.gmail.com` using STARTTLS on port `587`, sends from `accounts@ibraem.com` to `sales@emrcommerce.co`, and uses the visitor's address as `Reply-To`.
 
+To inspect contact delivery logs without exposing the SMTP token or submitted message content, run:
+
+```sh
+npx wrangler tail emr
+```
+
+Contact logs include a request ID, whether the secret binding is present, the SMTP stage, and safe Nodemailer status fields such as the response code and failed SMTP command.
+
 `.env.example` documents the only required secret name. Never add a real token to that file, expose `SMTP_TOKEN` through a `VITE_` variable, or commit `.dev.vars` to the repository. Running `npm run deploy` updates the existing `emr` Worker, so review the dry-run output before deploying.
 
 Business details are kept in `src/config.ts`. Confirm the placeholder email, location, canonical URL, and Open Graph URL before launch.
