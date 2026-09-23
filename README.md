@@ -35,7 +35,7 @@ To inspect contact delivery logs without exposing the Resend API key or submitte
 npx wrangler tail emr
 ```
 
-Contact logs include a request ID, whether the secret binding is present, the Resend request stage, the provider status, and sanitized provider error details.
+Contact logs are limited to concise delivery failures with a request ID and, when available, the provider HTTP status.
 
 `.env.example` documents the only required secret name. Never add a real API key to that file, expose `RESEND_API_KEY` through a `VITE_` variable, or commit `.dev.vars` to the repository. Running `npm run deploy` updates the existing `emr` Worker, so review the dry-run output before deploying.
 

@@ -62,16 +62,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-async function getSecretFingerprint(secret: string) {
-  const bytes = new TextEncoder().encode(secret)
-  const digest = await crypto.subtle.digest('SHA-256', bytes)
-
-  return Array.from(new Uint8Array(digest))
-    .slice(0, 6)
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 function normalizePayload(value: Record<string, unknown>): ContactPayload | null {
   const fields: Array<keyof ContactPayload> = [
     'firstName',
@@ -154,26 +144,10 @@ async function handleContact(request: Request, env: Env, requestId: string) {
     return contactResponse({ error: 'Please select a valid inquiry type.' }, 400, requestId)
   }
 
-  console.info('Contact request validated.', { requestId })
-
   if (!env.RESEND_API_KEY) {
-    const diagnostics = {
-      stage: 'configuration',
-      resendApiKeyConfigured: false,
-      endpoint: resendEndpoint,
-      from: contactSender,
-      to: contactEmail,
-    }
-
-    console.error('Contact Resend configuration is missing.', {
-      requestId,
-      ...diagnostics,
-    })
+    console.error('Contact email is not configured.', { requestId })
     return contactResponse(
-      {
-        error: 'Email delivery is temporarily unavailable.',
-        diagnostics,
-      },
+      { error: 'Email delivery is temporarily unavailable.' },
       503,
       requestId,
     )
@@ -191,18 +165,6 @@ async function handleContact(request: Request, env: Env, requestId: string) {
   ].join('\n')
 
   try {
-    const resendApiKeyFingerprint = await getSecretFingerprint(env.RESEND_API_KEY)
-
-    console.info('Contact Resend delivery starting.', {
-      requestId,
-      endpoint: resendEndpoint,
-      from: contactSender,
-      to: contactEmail,
-      resendApiKeyConfigured: true,
-      resendApiKeyLength: env.RESEND_API_KEY.length,
-      resendApiKeyFingerprint,
-    })
-
     const providerResponse = await fetch(resendEndpoint, {
       method: 'POST',
       headers: {
@@ -218,102 +180,43 @@ async function handleContact(request: Request, env: Env, requestId: string) {
       }),
     })
 
-    let providerBody: unknown
-
-    try {
-      providerBody = await providerResponse.json()
-    } catch {
-      const diagnostics = {
-        stage: 'provider-response',
-        resendApiKeyConfigured: true,
-        providerStatus: providerResponse.status,
-        providerResponseValid: false,
-      }
-
-      console.error('Resend returned an invalid response.', {
+    if (!providerResponse.ok) {
+      console.error('Contact email provider rejected delivery.', {
         requestId,
-        ...diagnostics,
+        status: providerResponse.status,
       })
       return contactResponse(
-        {
-          error: 'Email delivery failed. Please try again later.',
-          diagnostics,
-        },
+        { error: 'Email delivery failed. Please try again later.' },
         502,
         requestId,
       )
     }
 
-    if (!providerResponse.ok) {
-      const providerError = isRecord(providerBody) ? providerBody : {}
-      const diagnostics = {
-        stage: 'provider-rejection',
-        resendApiKeyConfigured: true,
-        providerStatus: providerResponse.status,
-        providerErrorName:
-          typeof providerError.name === 'string' ? providerError.name.slice(0, 120) : undefined,
-        providerErrorMessage:
-          typeof providerError.message === 'string' ? providerError.message.slice(0, 500) : undefined,
-      }
+    let providerBody: unknown
 
-      console.error('Resend rejected contact delivery.', {
-        requestId,
-        ...diagnostics,
-      })
+    try {
+      providerBody = await providerResponse.json()
+    } catch {
+      console.error('Contact email provider returned an invalid response.', { requestId })
       return contactResponse(
-        {
-          error: 'Email delivery failed. Please try again later.',
-          diagnostics,
-        },
+        { error: 'Email delivery failed. Please try again later.' },
         502,
         requestId,
       )
     }
 
     if (!isRecord(providerBody) || typeof providerBody.id !== 'string') {
-      const diagnostics = {
-        stage: 'provider-response',
-        resendApiKeyConfigured: true,
-        providerStatus: providerResponse.status,
-        providerResponseValid: false,
-      }
-
-      console.error('Resend returned a success response without an email ID.', {
-        requestId,
-        ...diagnostics,
-      })
+      console.error('Contact email provider returned an invalid response.', { requestId })
       return contactResponse(
-        {
-          error: 'Email delivery failed. Please try again later.',
-          diagnostics,
-        },
+        { error: 'Email delivery failed. Please try again later.' },
         502,
         requestId,
       )
     }
-
-    console.info('Contact Resend delivery succeeded.', {
-      requestId,
-      providerStatus: providerResponse.status,
-      providerEmailId: providerBody.id,
-    })
-  } catch (error) {
-    const diagnostics = {
-      stage: 'provider-request',
-      resendApiKeyConfigured: true,
-      name: error instanceof Error ? error.name : undefined,
-      message: error instanceof Error ? error.message.slice(0, 500) : undefined,
-    }
-
-    console.error('Resend request failed.', {
-      requestId,
-      ...diagnostics,
-    })
+  } catch {
+    console.error('Contact email request failed.', { requestId })
     return contactResponse(
-      {
-        error: 'Email delivery failed. Please try again later.',
-        diagnostics,
-      },
+      { error: 'Email delivery failed. Please try again later.' },
       502,
       requestId,
     )
@@ -328,12 +231,6 @@ export default {
 
     if (url.pathname === '/api/contact') {
       const requestId = request.headers.get('cf-ray') ?? crypto.randomUUID()
-
-      console.info('Contact request received.', {
-        requestId,
-        method: request.method,
-        resendApiKeyConfigured: Boolean(env.RESEND_API_KEY),
-      })
 
       if (request.method !== 'POST') {
         return contactResponse(
