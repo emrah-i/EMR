@@ -19,7 +19,7 @@ const services = [
     number: '03',
     title: 'Supplier Relationships',
     description:
-      'We prioritize clear communication, dependable purchasing, and relationships built for the long term.',
+      'We prioritize clear communication, strategic alignment, and relationships built to create long-term value.',
   },
 ]
 
@@ -70,10 +70,10 @@ export default function App() {
                 className="mx-auto mb-6 max-w-[980px] text-7xl leading-none font-semibold tracking-tight text-emr-navy max-[960px]:text-6xl max-[760px]:text-5xl"
                 id="hero-title"
               >
-                A dependable approach to wholesale purchasing and distribution
+                Focused execution. Efficient distribution. Lasting value.
               </h1>
               <p className="mx-auto mb-7 max-w-[800px] text-lg leading-8 text-[#5c6368] max-[960px]:max-w-[680px] max-[520px]:max-w-[330px] max-[520px]:text-base max-[520px]:leading-7">
-                EMR Commerce purchases and distributes consumer products through established sales channels. We work directly with individual brands and suppliers to support dependable, responsible distribution.
+                EMR Commerce brings products and established sales channels together through a strategic model built for efficiency and sustainable growth.
               </p>
               <div className="flex items-center justify-center gap-6 max-[520px]:w-full max-[520px]:flex-col max-[520px]:gap-4">
                 <a className={`${primaryButtonClasses} max-[520px]:w-full`} href="#contact">Get in Touch</a>
@@ -94,7 +94,7 @@ export default function App() {
             </div>
             <div className="min-w-0 flex-1 pt-6 text-base text-[#5d6469] max-[960px]:max-w-[680px] max-[960px]:pt-0">
               <p className="mb-5">
-                EMR Commerce is a U.S.-based wholesale purchasing and distribution company focused on sourcing quality consumer products and building dependable supplier relationships.
+                EMR Commerce is a U.S.-based wholesale purchasing and distribution company focused on sourcing quality consumer products and creating long-term value for suppliers.
               </p>
               <p className="m-0">
                 We work directly with individual brands, manufacturers, distributors, wholesalers, and suppliers to evaluate inventory opportunities, purchase in volume, and extend product distribution through established sales channels.
@@ -108,9 +108,9 @@ export default function App() {
             <div className="mb-12 flex items-end justify-between gap-12 max-[760px]:mb-10 max-[760px]:flex-col max-[760px]:items-start max-[760px]:gap-6">
               <div className="min-w-0 flex-1">
                 <p className={sectionLabelClasses}>What We Do</p>
-                <h2 className={headingTwoClasses} id="services-title">From wholesale purchase to responsible distribution</h2>
+                <h2 className={headingTwoClasses} id="services-title">From wholesale purchase to strategic distribution</h2>
               </div>
-              <p className="mb-1 max-w-sm text-[#646b70] max-[760px]:max-w-[560px]">Focused wholesale operations designed to move the right products through dependable channels</p>
+              <p className="mb-1 max-w-sm text-[#646b70] max-[760px]:max-w-[560px]">Focused wholesale operations designed to move the right products efficiently through established channels</p>
             </div>
 
             <div className="border-t border-emr-light-gray">

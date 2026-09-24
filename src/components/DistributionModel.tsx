@@ -95,7 +95,7 @@ export function DistributionModel() {
         <h2 className="m-0 text-xl leading-tight font-semibold tracking-tight text-emr-navy max-[520px]:text-lg" id="distribution-model-title">
           A Focused Distribution Model
         </h2>
-        <p className="mt-1 text-xs leading-snug text-[#64778d]">Disciplined purchasing, responsible distribution</p>
+        <p className="mt-1 text-xs leading-snug text-[#64778d]">Strategic purchasing, efficient distribution</p>
       </div>
 
       <ol className="m-0 list-none p-0" aria-label="EMR Commerce distribution process">
