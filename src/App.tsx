@@ -19,7 +19,7 @@ const services = [
     number: '03',
     title: 'Supplier Relationships',
     description:
-      'We prioritize clear communication, strategic alignment, and relationships built to create long-term value.',
+      'We prioritize clear communication, strategic alignment, and relationships built to support continuous growth.',
   },
 ]
 
@@ -67,12 +67,12 @@ export default function App() {
             <div className="flex w-full min-w-0 max-w-[980px] flex-col items-center justify-center text-center">
               <p className={sectionLabelClasses}>Wholesale Purchasing &amp; Product Distribution</p>
               <h1
-                className="mx-auto mb-6 max-w-[980px] text-7xl leading-none font-semibold tracking-tight text-emr-navy max-[960px]:text-6xl max-[760px]:text-5xl"
+                className="mx-auto mb-6 max-w-[980px] text-[5rem] leading-none font-semibold tracking-tight text-emr-navy max-[960px]:text-7xl max-[760px]:text-5xl"
                 id="hero-title"
               >
-                Focused execution. Efficient distribution. Lasting value.
+                Focused execution. <br/> Efficient distribution. <br/> Continuous growth.
               </h1>
-              <p className="mx-auto mb-7 max-w-[800px] text-lg leading-8 text-[#5c6368] max-[960px]:max-w-[680px] max-[520px]:max-w-[330px] max-[520px]:text-base max-[520px]:leading-7">
+              <p className="mx-auto mb-7 max-w-[680px] text-lg leading-8 text-[#5c6368] max-[520px]:max-w-[330px] max-[520px]:text-base max-[520px]:leading-7">
                 EMR Commerce brings products and established sales channels together through a strategic model built for efficiency and sustainable growth.
               </p>
               <div className="flex items-center justify-center gap-6 max-[520px]:w-full max-[520px]:flex-col max-[520px]:gap-4">
@@ -94,7 +94,7 @@ export default function App() {
             </div>
             <div className="min-w-0 flex-1 pt-6 text-base text-[#5d6469] max-[960px]:max-w-[680px] max-[960px]:pt-0">
               <p className="mb-5">
-                EMR Commerce is a U.S.-based wholesale purchasing and distribution company focused on sourcing quality consumer products and creating long-term value for suppliers.
+                EMR Commerce is a U.S.-based wholesale purchasing and distribution company focused on sourcing quality consumer products and supporting continuous growth for suppliers.
               </p>
               <p className="m-0">
                 We work directly with individual brands, manufacturers, distributors, wholesalers, and suppliers to evaluate inventory opportunities, purchase in volume, and extend product distribution through established sales channels.
