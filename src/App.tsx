@@ -70,7 +70,7 @@ export default function App() {
                 className="mx-auto mb-6 max-w-[980px] text-[5rem] leading-none font-semibold tracking-tight text-emr-navy max-[960px]:text-7xl max-[760px]:text-5xl"
                 id="hero-title"
               >
-                Focused execution. <br/> Efficient distribution. <br/> Continuous growth.
+                Focused sourcing. <br/> Efficient distribution. <br/> Continuous growth.
               </h1>
               <p className="mx-auto mb-7 max-w-[680px] text-lg leading-8 text-[#5c6368] max-[520px]:max-w-[330px] max-[520px]:text-base max-[520px]:leading-7">
                 EMR Commerce brings products and established sales channels together through a strategic model built for efficiency and sustainable growth.
