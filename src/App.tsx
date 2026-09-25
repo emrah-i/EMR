@@ -65,7 +65,7 @@ export default function App() {
         >
           <div className={`${containerClasses} flex items-center justify-center`}>
             <div className="flex w-full min-w-0 max-w-[980px] flex-col items-center justify-center text-center">
-              <p className={sectionLabelClasses}>Wholesale Purchasing &amp; Product Distribution</p>
+              <p className={sectionLabelClasses}>Wholesale Purchasing &amp; Distribution</p>
               <h1
                 className="mx-auto mb-6 max-w-[980px] text-[5rem] leading-none font-semibold tracking-tight text-emr-navy max-[960px]:text-7xl max-[760px]:text-5xl"
                 id="hero-title"
