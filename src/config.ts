@@ -9,5 +9,7 @@ export const siteConfig = {
     '6:00 AM–5:00 PM PST',
   ],
   contactFormEndpoint: import.meta.env.VITE_CONTACT_FORM_ENDPOINT?.trim() || '/api/contact',
-  socialUrls: {} as Record<string, string>,
+  socialUrls: {
+    linkedin: 'https://www.linkedin.com/company/emr-commerce/',
+  },
 } as const

@@ -171,6 +171,19 @@ export default function App() {
                   <dt className="text-[0.75rem] font-bold tracking-[0.12em] text-[#626a6f] uppercase">Location</dt>
                   <dd className="m-0 font-semibold text-emr-navy">{siteConfig.location}</dd>
                 </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-[0.75rem] font-bold tracking-[0.12em] text-[#626a6f] uppercase">Social</dt>
+                  <dd className="m-0 font-semibold text-emr-navy">
+                    <a
+                      className="hover:underline hover:underline-offset-[3px]"
+                      href={siteConfig.socialUrls.linkedin}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      LinkedIn
+                    </a>
+                  </dd>
+                </div>
                 {siteConfig.phone && (
                   <div className="flex flex-col gap-1">
                     <dt className="text-[0.75rem] font-bold tracking-[0.12em] text-[#626a6f] uppercase">Phone</dt>
