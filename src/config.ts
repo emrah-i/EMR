@@ -2,7 +2,7 @@ export const siteConfig = {
   companyName: 'EMR Commerce',
   email: 'sales@emrcommerce.co',
   phone: '',
-  location: 'Chicago, IL',
+  location: 'Bensalem, PA',
   businessHours: [
     '9:00 AM–8:00 PM EST',
     '8:00 AM–7:00 PM CST',
